@@ -24,6 +24,14 @@ class GroupDetail(APIView):
         serializer = sr.GroupSerializer(group)
         return Response(serializer.data)
 
+    def post(self, request, pk, format=None):
+        group = self.get_object(pk)
+        serializer = sr.GroupSerializer(group, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class GroupStudentsList(APIView):
     def get_objects(self, pk):
         try:

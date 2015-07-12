@@ -32,6 +32,14 @@ class UserDetail(APIView):
         serializer = sr.AppUserSerializer(user)
         return Response(serializer.data)
 
+    def post(self, request, pk, format=None):
+        user = self.get_object(pk)
+        serializer = sr.AppUserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class UserSchoolsList(APIView):
     def get_objects(self, pk):
         try:
@@ -83,3 +91,64 @@ class UserAchievementList(APIView):
         objects = self.get_objects(pk)
         serializer = sr.AchievementSerializer(objects, many=True)
         return Response(serializer.data)
+
+class UserAddSchool(APIView):
+    def get_object(self, model, pk):
+        try:
+            return model.objects.get(pk=pk)
+        except model.DoesNotExist:
+            raise Http404
+
+    def post(self, request, pk, format=None):
+        user = self.get_object(AppUser, pk)
+        school = self.get_object(School, request.data['school'])
+        user.schools.add(school)
+        user.save()
+
+        return Response(status=status.HTTP_200_OK)
+
+class UserRemoveSchool(APIView):
+    def get_object(self, model, pk):
+        try:
+            return model.objects.get(pk=pk)
+        except model.DoesNotExist:
+            raise Http404
+
+    def post(self, request, pk, format=None):
+        user = self.get_object(AppUser, pk)
+        school = self.get_object(School, request.data['school'])
+        user.schools.remove(school)
+        user.save()
+
+        return Response(status=status.HTTP_200_OK)
+
+class UserAddGroup(APIView):
+    def get_object(self, model, pk):
+        try:
+            return model.objects.get(pk=pk)
+        except model.DoesNotExist:
+            raise Http404
+
+    def post(self, request, pk, format=None):
+        user = self.get_object(AppUser, pk)
+        group = self.get_object(Group, request.data['group'])
+        user.groups.add(group)
+        user.save()
+
+        return Response(status=status.HTTP_200_OK)
+
+class UserRemoveGroup(APIView):
+    def get_object(self, model, pk):
+        try:
+            return model.objects.get(pk=pk)
+        except model.DoesNotExist:
+            raise Http404
+
+    def post(self, request, pk, format=None):
+        user = self.get_object(AppUser, pk)
+        group = self.get_object(Group, request.data['group'])
+        user.groups.remove(group)
+        user.save()
+
+        return Response(status=status.HTTP_200_OK)
+

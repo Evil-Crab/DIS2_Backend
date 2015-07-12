@@ -34,6 +34,20 @@ class AppUserSerializer(serializers.ModelSerializer):
 
         return appUser
 
+    def update(self, instance, validated_data):
+        user = instance.user
+        for (key, value) in validated_data.items():
+            if key == 'user':
+                for (user_key, user_value) in value.items():
+                    setattr(user, user_key, user_value)
+            else:
+                setattr(instance, key, value)
+
+        user.save()
+        instance.save()
+
+        return instance
+
 class SchoolSerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=50)
     description = serializers.CharField(required=False)
@@ -73,6 +87,12 @@ class RewardSerializer(serializers.ModelSerializer):
         exclusions = super(RewardSerializer, self).get_validation_exclusions()
         return exclusions + ['description', 'requirements', ]
 
+    def create(self, validated_data):
+        validated_data['school_id'] = self.initial_data['school']
+        reward = Reward.objects.create(**validated_data)
+
+        return reward
+
 class EventSerializer(serializers.ModelSerializer):
     value = serializers.IntegerField(default=0)
     name = serializers.CharField(max_length=50)
@@ -88,6 +108,18 @@ class EventSerializer(serializers.ModelSerializer):
     def get_validation_exclusions(self):
         exclusions = super(EventSerializer, self).get_validation_exclusions()
         return exclusions + ['description']
+
+    def create(self, validated_data):
+        validated_data['school_id'] = self.initial_data['school']
+        event = Event.objects.create(**validated_data)
+
+        for student_id in self.initial_data['students']:
+            student = AppUser.objects.get(pk=student_id)
+            event.students.add(student)
+
+        event.save()
+
+        return event
 
 class AchievementSerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=50)
