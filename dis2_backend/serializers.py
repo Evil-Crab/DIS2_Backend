@@ -17,9 +17,19 @@ class AppUserSerializer(serializers.ModelSerializer):
     bio = serializers.CharField(required=False)
     password = serializers.CharField(write_only=True)
 
+    total_points = serializers.SerializerMethodField()
+
+    def get_total_points(self, obj):
+        events = obj.events.all()
+        total = 0
+        for item in events:
+            total += item.value
+        return total
+
     class Meta:
         model = AppUser
-        fields = ('id', 'username', 'password', 'first_name', 'last_name', 'is_staff', 'email', 'avatar', 'bio')
+        fields = ('id', 'username', 'password', 'first_name', 'last_name', 'is_staff', 'email', 'avatar', 'bio', 'total_points', )
+        read_only_fields = ('total_points',)
         extra_kwargs = {'password': {'write_only': True}}
 
     def get_validation_exclusions(self):
